@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: dil_app_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dil_app
+    ports:
+      - "5434:5432" # host 5434 -> container 5432
+    volumes:
+      - dil_app_db_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: dil_app_backend
+    command: npm run start:dev
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+
+volumes:
+  dil_app_db_data:
