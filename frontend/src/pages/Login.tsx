@@ -13,7 +13,7 @@ export default function Login() {
     <div className="min-h-screen bg-slate-950 text-white flex">
       
       {/* Left Side - Login */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 lg:rounded-r-[3rem]">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16">
         <div className="w-full max-w-md space-y-8">
           
           {/* Logo */}
@@ -91,7 +91,9 @@ export default function Login() {
       </div>
 
       {/* Right Side - Visual/Hero */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 relative overflow-hidden lg:rounded-l-[3rem]">
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-8">
+        <div className="w-full max-w-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 relative overflow-hidden rounded-[3rem] h-[90vh]">
+        
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-full h-full" style={{
@@ -106,7 +108,7 @@ export default function Login() {
         <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-white/10 rounded-3xl backdrop-blur-sm animate-pulse" style={{animationDuration: '3.5s', animationDelay: '0.5s'}}></div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center w-full p-16 text-white">
+        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 text-white h-full">
           <div className="max-w-md space-y-12">
             
             {/* Main Icon */}
@@ -127,32 +129,32 @@ export default function Login() {
             </div>
 
             {/* Features */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
+            <div className="space-y-6 flex flex-col items-center w-full">
+              <div className="flex items-start gap-4 w-full max-w-xs">
                 <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <div className="flex-1">
+                <div>
                   <h3 className="font-semibold text-lg">Akıllı Öğrenme</h3>
                   <p className="text-purple-100 text-sm">Adaptif algoritma ile kişisel gelişim</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-start gap-4 w-full max-w-xs">
                 <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
                   <Zap className="w-6 h-6 text-white" />
                 </div>
-                <div className="flex-1">
+                <div>
                   <h3 className="font-semibold text-lg">Hızlı İlerleme</h3>
                   <p className="text-purple-100 text-sm">Günlük pratiklerle sürekli gelişim</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-start gap-4 w-full max-w-xs">
                 <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
                   <Award className="w-6 h-6 text-white" />
                 </div>
-                <div className="flex-1">
+                <div>
                   <h3 className="font-semibold text-lg">Başarı Takibi</h3>
                   <p className="text-purple-100 text-sm">Hedeflerine ulaşmanı izle</p>
                 </div>
@@ -160,6 +162,8 @@ export default function Login() {
             </div>
 
           </div>
+        </div>
+        
         </div>
       </div>
 

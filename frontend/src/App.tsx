@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import AuthSuccess from "./pages/AuthSuccess";
 import Dashboard from "./pages/Dashboard";
+import Learn from "./pages/Learn";
+
 
 function RequireAuth({ children }: { children: React.ReactElement }) {
   const token = localStorage.getItem("token");
@@ -30,6 +32,16 @@ export default function App() {
             </RequireAuth>
           }
         />
+
+        <Route
+          path="/learn"
+          element={
+            <RequireAuth>
+              <Learn />
+            </RequireAuth>
+          }
+        />
+        
       </Routes>
     </BrowserRouter>
   );

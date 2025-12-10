@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { WordModule } from './word/word.module';
 
 @Module({
   imports: [
@@ -8,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
       isGlobal: true,
     }),
     AuthModule,
+    WordModule,
   ],
   controllers: [],
   providers: [],

@@ -6,6 +6,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Layout from "../components/Layout";
+import { useNavigate } from "react-router-dom";
 
 type DecodedToken = {
   sub: string;
@@ -36,6 +37,8 @@ function decodeJwt(token: string | null): DecodedToken | null {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   const token = localStorage.getItem("token");
   const decoded = decodeJwt(token);
 
@@ -101,7 +104,10 @@ export default function Dashboard() {
         {/* Action Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Kelime Öğren */}
-          <div className="group p-8 rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/50 backdrop-blur-sm hover:border-violet-500/50 transition-all cursor-pointer">
+          <div
+            className="group p-8 rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-700/50 backdrop-blur-sm hover:border-violet-500/50 transition-all cursor-pointer"
+            onClick={() => navigate("/learn")}
+          >
             <div className="flex items-start justify-between mb-4">
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
                 <BookOpen className="w-7 h-7 text-white" />

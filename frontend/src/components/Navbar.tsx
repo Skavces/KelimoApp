@@ -1,6 +1,8 @@
 import { BookOpen, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
   const handleLogout = () => {
@@ -13,7 +15,10 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-8 py-4 flex items-center justify-between">
         
         {/* Logo */}
-        <div className="flex items-center gap-3">
+        <div
+          className="flex items-center gap-3 cursor-pointer select-none"
+          onClick={() => navigate("/dashboard")}
+        >
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
             <BookOpen className="w-5 h-5 text-white" />
           </div>
@@ -24,7 +29,6 @@ export default function Navbar() {
 
         {/* Sağ taraf */}
         <div className="flex items-center gap-4">
-          {/* Eğer kullanıcı giriş yaptıysa gösterilecek */}
           {token ? (
             <button
               onClick={handleLogout}
@@ -34,9 +38,7 @@ export default function Navbar() {
               <span>Çıkış yap</span>
             </button>
           ) : (
-            <>
-            {/* Giriş yapılmadıysa buton yok */}
-            </>
+            <></>
           )}
         </div>
       </div>
