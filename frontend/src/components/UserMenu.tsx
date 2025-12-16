@@ -12,10 +12,8 @@ export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-
   const token = localStorage.getItem("token");
   const [user, setUser] = useState<UserProfile | null>(null);
-  
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const getAvatarSrc = (avatarPath: string | undefined | null) => {

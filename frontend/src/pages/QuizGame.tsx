@@ -48,22 +48,49 @@ export default function QuizGame() {
     fetchQuestions();
   }, [mode, apiUrl, token]);
 
+  // --- YENİ EKLENEN KISIM: Oyunu Kaydetme Fonksiyonu ---
+  const finishGame = async (finalScore: number) => {
+    setIsFinished(true);
+
+    try {
+      await fetch(`${apiUrl}/words/game-result`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          gameType: 'QUIZ',
+          score: finalScore * 10, // Her doğru cevap 10 XP
+          correct: finalScore,
+          wrong: questions.length - finalScore
+        })
+      });
+      console.log("Oyun sonucu başarıyla kaydedildi!");
+    } catch (error) {
+      console.error("Oyun sonucu kaydedilirken hata oluştu:", error);
+    }
+  };
+
   const handleOptionClick = (option: string) => {
     if (selectedOption) return; 
     setSelectedOption(option);
 
+    // Skoru anlık hesaplayalım ki son soruda güncel veri gitsin
+    let nextScore = score;
     if (option === questions[currentQIndex].correctAnswer) {
-      setScore(s => s + 1);
+      nextScore = score + 1;
+      setScore(nextScore);
     } 
 
-    // 1.5 sn sonra sonraki soru
+    // 1.5 sn sonra sonraki soru veya bitiş
     setTimeout(() => {
       if (currentQIndex < questions.length - 1) {
         setCurrentQIndex(prev => prev + 1);
         setSelectedOption(null);
       } else {
-        setIsFinished(true);
-        // İstersen burada skoru kaydetmek için backend'e istek atabilirsin
+        // Oyun Bitti - Yeni fonksiyonu çağırıyoruz
+        finishGame(nextScore);
       }
     }, 1500);
   };
@@ -82,7 +109,7 @@ export default function QuizGame() {
             </div>
             <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Tebrikler! 🎉</h2>
             <p className="text-slate-500 dark:text-slate-400 mb-8">
-                Alıştırmayı tamamladın.
+                Alıştırmayı tamamladın. Puanın hesabına eklendi.
             </p>
             
             <div className="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 mb-8">

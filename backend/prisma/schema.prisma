@@ -20,6 +20,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   swipes    UserWordSwipe[]
+  gameResults UserGameResult[]
 }
 
 model Word {
@@ -50,4 +51,17 @@ enum SwipeStatus {
   VIEWED
   LEARNED
   SKIPPED
+}
+
+model UserGameResult {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  gameType  String   // 'QUIZ', 'SCRAMBLE', 'MEMORY', 'DICTATION'
+  score     Int      // Kazanılan puan
+  correct   Int      // Doğru sayısı
+  wrong     Int      // Yanlış sayısı
+  
+  createdAt DateTime @default(now())
 }

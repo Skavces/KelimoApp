@@ -42,7 +42,6 @@ export class UserController {
 
     const avatarUrl = cloudResult.secure_url;
 
-    // 2. Veritabanına bu URL'i kaydet
     await this.prisma.user.update({
       where: { id: req.user.userId },
       data: { avatar: avatarUrl },

@@ -79,6 +79,29 @@ export default function DictationGame() {
     });
   }, [currentIndex, words]);
 
+  // --- YENİ EKLENEN: Kayıt Fonksiyonu ---
+  const finishGame = async (finalScore: number) => {
+    setIsFinished(true);
+    try {
+      await fetch(`${apiUrl}/words/game-result`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          gameType: 'DICTATION',
+          score: finalScore * 10, // Her doğru 10 puan
+          correct: finalScore,
+          wrong: words.length - finalScore
+        })
+      });
+      console.log("Dictation sonucu kaydedildi.");
+    } catch (error) {
+      console.error("Kayıt hatası:", error);
+    }
+  };
+
   // 3. Ses Çalma Fonksiyonu (Hybrid)
   const handleSpeak = () => {
     const text = words[currentIndex]?.word;
@@ -93,7 +116,6 @@ export default function DictationGame() {
     setIsSpeaking(true);
     inputRef.current?.focus(); // Butona basınca odaktan çıkmasın
 
-    // Fallback Audio (Daha temiz ses için önce bunu deneyelim bu oyunda)
     playFallbackAudio(text);
   };
 
@@ -125,22 +147,24 @@ export default function DictationGame() {
     
     const correctWord = words[currentIndex].word.trim().toLowerCase();
     const userWord = userInput.trim().toLowerCase();
+    let nextScore = score;
 
     if (userWord === correctWord) {
       setStatus('correct');
-      setScore(s => s + 1);
+      nextScore = score + 1;
+      setScore(nextScore);
     } else {
       setStatus('wrong');
     }
 
-    // Bekleme süresi (Doğruysa hızlı, yanlışsa doğrusunu görsün diye yavaş)
     const delay = userWord === correctWord ? 1000 : 2500;
 
     setTimeout(() => {
       if (currentIndex < words.length - 1) {
         setCurrentIndex(prev => prev + 1);
       } else {
-        setIsFinished(true);
+        // Oyun Bitti
+        finishGame(nextScore);
       }
     }, delay);
   };

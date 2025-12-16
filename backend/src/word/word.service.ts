@@ -6,30 +6,129 @@ import { SwipeStatus } from '@prisma/client';
 export class WordService {
   constructor(private prisma: PrismaService) {}
 
+  async saveGameResult(userId: string, dto: { gameType: string; score: number; correct: number; wrong: number }) {
+    const finalScore = dto.score < 0 ? 0 : dto.score;
+
+    return this.prisma.userGameResult.create({
+      data: {
+        userId,
+        gameType: dto.gameType,
+        score: finalScore,
+        correct: dto.correct,
+        wrong: dto.wrong,
+      },
+    });
+  }
+
+  async getProgressStats(userId: string) {
+    const learnedCount = await this.prisma.userWordSwipe.count({
+      where: { userId, status: SwipeStatus.LEARNED },
+    });
+
+    const allGames = await this.prisma.userGameResult.aggregate({
+      where: { userId },
+      _sum: {
+        correct: true,
+        wrong: true,
+        score: true,
+      },
+    });
+
+    const totalCorrect = allGames._sum.correct || 0;
+    const totalWrong = allGames._sum.wrong || 0;
+    const totalQuestions = totalCorrect + totalWrong;
+    const totalScore = allGames._sum.score || 0;
+
+    const accuracy = totalQuestions > 0 
+      ? Math.round((totalCorrect / totalQuestions) * 100) 
+      : 0;
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const lastWeekSwipes = await this.prisma.userWordSwipe.findMany({
+      where: {
+        userId,
+        status: SwipeStatus.LEARNED,
+        createdAt: { gte: sevenDaysAgo },
+      },
+      select: { createdAt: true },
+    });
+
+    const lastWeekGames = await this.prisma.userGameResult.findMany({
+      where: {
+        userId,
+        createdAt: { gte: sevenDaysAgo },
+      },
+      select: { createdAt: true, score: true },
+    });
+
+    const daysMap = new Map<string, number>();
+    const trDays = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayName = trDays[d.getDay()];
+      if (!daysMap.has(dayName)) daysMap.set(dayName, 0);
+    }
+
+    lastWeekSwipes.forEach((swipe) => {
+      const dayName = trDays[swipe.createdAt.getDay()];
+      daysMap.set(dayName, (daysMap.get(dayName) || 0) + 10);
+    });
+
+    lastWeekGames.forEach((game) => {
+      const dayName = trDays[game.createdAt.getDay()];
+      daysMap.set(dayName, (daysMap.get(dayName) || 0) + Math.round(game.score / 10));
+    });
+
+    const weeklyData = Array.from(daysMap, ([name, words]) => ({ name, words })).reverse();
+    const { streak } = await this.getUserStats(userId); 
+    const badges = [
+      { id: 1, unlocked: learnedCount >= 10 }, // Yeni Başlayan
+      { id: 2, unlocked: streak >= 7 },       // Alev Alev
+      { id: 3, unlocked: learnedCount >= 100 }, // Kelime Avcısı
+      { id: 4, unlocked: accuracy >= 90 && totalQuestions >= 20 }, // Usta Dilci
+    ];
+
+    const recentGames = await this.prisma.userGameResult.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' }, 
+      take: 10, 
+    });
+
+    return {
+      totalScore,
+      totalLearned: learnedCount,
+      accuracy,
+      weeklyData,
+      badges,
+      streak,
+      recentGames,
+    };
+  }
+
   async getFeedWords(userId: string) {
     const words = await this.prisma.word.findMany({
       where: {
         NOT: {
           swipes: {
-            some: {
-              userId: userId,
-              status: SwipeStatus.LEARNED,
-            },
+            some: { userId: userId, status: SwipeStatus.LEARNED },
           },
         },
       },
       take: 100,
     });
+
     const shuffled = words.sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 20);
   }
 
   async swipeWord(userId: string, wordId: string, status: SwipeStatus) {
     const existingSwipe = await this.prisma.userWordSwipe.findFirst({
-      where: {
-        userId,
-        wordId,
-      },
+      where: { userId, wordId },
     });
 
     if (existingSwipe) {
@@ -39,134 +138,83 @@ export class WordService {
       });
     } else {
       return this.prisma.userWordSwipe.create({
-        data: {
-          userId,
-          wordId,
-          status,
-        },
+        data: { userId, wordId, status },
       });
     }
   }
 
   async getUserStats(userId: string) {
-    // 1. Öğrenilen Kelime Sayısı
     const learnedCount = await this.prisma.userWordSwipe.count({
-      where: {
-        userId,
-        status: SwipeStatus.LEARNED,
-      },
+      where: { userId, status: SwipeStatus.LEARNED },
     });
 
-    // 2. Toplam Kelime Sayısı (Dashboard'daki "Toplam Havuz" için lazım)
     const totalCount = await this.prisma.word.count();
-
-    // 3. STREAK (GÜN SERİSİ) HESAPLAMA
-    // Kullanıcının tüm swipe işlemlerinin tarihlerini çek
     const activities = await this.prisma.userWordSwipe.findMany({
       where: { userId },
       select: { createdAt: true },
       orderBy: { createdAt: 'desc' },
     });
 
-    // Tarihleri YYYY-MM-DD formatına çevir ve tekrar edenleri temizle
     const uniqueDates = Array.from(new Set(activities.map(a => a.createdAt.toISOString().split('T')[0])));
-
     let streak = 0;
     const now = new Date();
     const today = now.toISOString().split('T')[0];
     
-    // Dünü hesapla
     const yesterdayDate = new Date(now);
     yesterdayDate.setDate(yesterdayDate.getDate() - 1);
     const yesterday = yesterdayDate.toISOString().split('T')[0];
 
-    // Hiç aktivite yoksa 0
     if (uniqueDates.length === 0) {
       streak = 0;
     } 
-    // Bugün veya dün işlem yapılmadıysa seri bozulmuştur
     else if (!uniqueDates.includes(today) && !uniqueDates.includes(yesterday)) {
       streak = 0;
     } 
     else {
-      // Başlangıç noktasını belirle (Bugün işlem yaptıysa bugün, yapmadıysa dün)
       let currentDateStr = uniqueDates.includes(today) ? today : yesterday;
-      
-      streak = 1; // En az 1 gün var
+      streak = 1;
 
-      // Geriye doğru ardışık günleri say
       for (let i = 1; i < uniqueDates.length; i++) {
-        const prevDateStr = uniqueDates[i]; // Geçmişteki tarih
-        
-        // currentDateStr'den 1 gün öncesini hesapla
+        const prevDateStr = uniqueDates[i];
         const expectedDateObj = new Date(currentDateStr);
         expectedDateObj.setDate(expectedDateObj.getDate() - 1);
         const expectedDateStr = expectedDateObj.toISOString().split('T')[0];
 
         if (prevDateStr === expectedDateStr) {
           streak++;
-          currentDateStr = prevDateStr; // Zinciri devam ettir
+          currentDateStr = prevDateStr;
         } else {
-          break; // Zincir koptu
+          break;
         }
       }
     }
 
-    return {
-      learnedCount,
-      totalCount, // Dashboard'da kullanıyorsun
-      streak,     // Artık hesaplanmış gerçek streak
-    };
+    return { learnedCount, totalCount, streak };
   }
 
   async getLearnedWords(userId: string) {
     return this.prisma.word.findMany({
       where: {
         swipes: {
-          some: {
-            userId: userId,
-            status: SwipeStatus.LEARNED,
-          },
+          some: { userId: userId, status: SwipeStatus.LEARNED },
         },
       },
-      orderBy: {
-        text: 'asc',
-      },
+      orderBy: { text: 'asc' },
     });
   }
 
-  async generateQuiz(userId: string, mode: 'EN_TR' | 'TR_EN') { // userId: string yapıldı
-    // 1. Kullanıcının öğrendiği kelimeleri çek
-    const learnedWords = await this.prisma.word.findMany({
-      where: {
-        swipes: { // BURASI DÜZELDİ: userWords -> swipes
-          some: {
-            userId: userId,
-            status: SwipeStatus.LEARNED, // Enum kullanıldı
-          },
-        },
-      },
-    });
+  async generateQuiz(userId: string, mode: 'EN_TR' | 'TR_EN') {
 
-    // 2. Yeterli kelime var mı kontrolü
-    if (learnedWords.length < 5) {
-      // Importlar eklendiği için artık burası hata vermeyecek
-      throw new HttpException(
-        'Yeterli kelime yok. En az 5 kelime öğrenmelisin.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    const learnedWords = await this.getLearnedWordsForGame(userId, 5);
 
-    // 3. Soruları karıştır
     const shuffled = learnedWords.sort(() => 0.5 - Math.random());
     
-    // İlk 10 tanesini al
     const questions = shuffled.slice(0, 10).map((word) => {
-      // Yanlış cevapları seç
+
       const otherWords = learnedWords.filter((w) => w.id !== word.id);
       const wrongOptions = otherWords
         .sort(() => 0.5 - Math.random())
-        .slice(0, 3);
+        .slice(0, 3); // 3 tane yanlış
 
       const optionsRaw = [...wrongOptions, word];
       const optionsShuffled = optionsRaw.sort(() => 0.5 - Math.random());
@@ -192,33 +240,21 @@ export class WordService {
   }
 
   async getScrambleWords(userId: string) {
-    const learnedWords = await this.prisma.word.findMany({
-      where: {
-        swipes: {
-          some: { userId: userId, status: SwipeStatus.LEARNED },
-        },
-      },
-    });
+    const learnedWords = await this.getLearnedWordsForGame(userId, 5);
 
-    if (learnedWords.length < 5) {
-      throw new HttpException('Yeterli kelime yok.', HttpStatus.BAD_REQUEST);
-    }
-
-    // Karıştır ve 10 tane seç
     const shuffled = learnedWords.sort(() => 0.5 - Math.random()).slice(0, 10);
 
     return shuffled.map(w => ({
       id: w.id,
-      word: w.text,    // İngilizcesi (Kurulacak kelime)
-      meaning: w.meaning // Türkçesi (İpucu)
+      word: w.text,
+      meaning: w.meaning
     }));
   }
 
   async getFillBlankGame(userId: string) {
-    // 1. Örnek cümlesi (example) olan öğrenilmiş kelimeleri çek
     const words = await this.prisma.word.findMany({
       where: {
-        example: { not: null }, // Null olmayanları getir diyoruz
+        example: { not: null },
         swipes: {
           some: { userId: userId, status: SwipeStatus.LEARNED },
         },
@@ -226,24 +262,19 @@ export class WordService {
     });
 
     if (words.length < 5) {
-      throw new HttpException('Yeterli örnek cümleli kelime yok.', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Yeterli örnek cümleli kelime yok. Öğrenmeye devam et!', HttpStatus.BAD_REQUEST);
     }
 
-    // 2. Karıştır ve 10 tane seç
     const targetWords = words.sort(() => 0.5 - Math.random()).slice(0, 10);
 
-    // 3. Soruları hazırla
     return targetWords.map((word) => {
-      // Yanlış şıkları seç
       const distractors = words
         .filter((w) => w.id !== word.id)
         .sort(() => 0.5 - Math.random())
         .slice(0, 3);
 
-      // Şıkları birleştir ve karıştır
       const options = [...distractors, word].sort(() => 0.5 - Math.random());
 
-      // word.example null ise boş string ("") kullan diyoruz.
       const exampleSentence = word.example || ""; 
 
       const hiddenSentence = exampleSentence.replace(
@@ -253,37 +284,22 @@ export class WordService {
 
       return {
         id: word.id,
-        question: hiddenSentence, // Gizlenmiş cümle
-        correctAnswer: word.text, // Doğru kelime
-        options: options.map(o => o.text), // Şıklar
-        meaning: word.meaning // İpucu
+        question: hiddenSentence,
+        correctAnswer: word.text,
+        options: options.map(o => o.text),
+        meaning: word.meaning
       };
     });
   }
 
   async getMemoryGame(userId: string) {
-    // 1. Öğrenilmiş kelimeleri al
-    const words = await this.prisma.word.findMany({
-      where: {
-        swipes: {
-          some: { userId: userId, status: SwipeStatus.LEARNED },
-        },
-      },
-    });
+    const words = await this.getLearnedWordsForGame(userId, 6); 
 
-    if (words.length < 6) {
-      throw new HttpException('Yeterli kelime yok. En az 6 kelime öğrenmelisin.', HttpStatus.BAD_REQUEST);
-    }
-
-    // 2. Karıştır ve 6 tane seç
     const selectedWords = words.sort(() => 0.5 - Math.random()).slice(0, 6);
 
-    // 3. Kartları oluştur
-    //Never hatası almamak için açıkça any alıyoruz
     const cards: any[] = [];
-    
+
     selectedWords.forEach((word) => {
-      
       cards.push({
         id: `${word.id}-en`,
         matchId: word.id,
@@ -299,12 +315,22 @@ export class WordService {
       });
     });
 
-    // 4. Shuffle all
     return cards.sort(() => 0.5 - Math.random());
   }
 
   async getDictationGame(userId: string) {
-    // 1. Öğrenilen kelimeleri çek
+    const words = await this.getLearnedWordsForGame(userId, 5);
+
+    const shuffled = words.sort(() => 0.5 - Math.random()).slice(0, 10);
+
+    return shuffled.map(w => ({
+      id: w.id,
+      word: w.text,
+      meaning: w.meaning
+    }));
+  }
+
+  private async getLearnedWordsForGame(userId: string, minCount: number) {
     const words = await this.prisma.word.findMany({
       where: {
         swipes: {
@@ -313,17 +339,12 @@ export class WordService {
       },
     });
 
-    if (words.length < 5) {
-      throw new HttpException('Yeterli kelime yok. En az 5 kelime öğrenmelisin.', HttpStatus.BAD_REQUEST);
+    if (words.length < minCount) {
+      throw new HttpException(
+        `Yeterli kelime yok. Bu oyun için en az ${minCount} kelime öğrenmelisin.`,
+        HttpStatus.BAD_REQUEST,
+      );
     }
-
-    // 2. Karıştır ve 10 tane seç
-    const shuffled = words.sort(() => 0.5 - Math.random()).slice(0, 10);
-
-    return shuffled.map(w => ({
-      id: w.id,
-      word: w.text,
-      meaning: w.meaning // İpucu olarak kullanabiliriz
-    }));
+    return words;
   }
 }

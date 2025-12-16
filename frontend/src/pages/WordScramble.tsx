@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, ArrowRight, XCircle } from "lucide-react"; // XCircle eklendi
+import { CheckCircle2, ArrowRight, XCircle } from "lucide-react";
 
 type ScrambleWord = {
   id: string;
@@ -68,6 +68,29 @@ export default function WordScramble() {
     }
   }, [currentIndex, words]);
 
+  // --- YENİ EKLENEN: Oyunu Kaydetme Fonksiyonu ---
+  const finishGame = async (finalScore: number) => {
+    setIsFinished(true);
+    try {
+      await fetch(`${apiUrl}/words/game-result`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          gameType: 'SCRAMBLE',
+          score: finalScore * 10, // Her kelime 10 puan
+          correct: finalScore,
+          wrong: words.length - finalScore
+        })
+      });
+      console.log("Scramble sonucu kaydedildi.");
+    } catch (error) {
+      console.error("Kayıt hatası:", error);
+    }
+  };
+
   // 3. Fonksiyonlar
   const handleLetterClick = useCallback((letterObj: { id: number, char: string }) => {
     if (status !== 'playing') return;
@@ -89,24 +112,30 @@ export default function WordScramble() {
 
     if (userWord.length !== currentWord.length) return;
 
-    let delay = 1500; // Varsayılan bekleme süresi
+    let delay = 1500;
+    
+    // Skoru yerel değişkende tutuyoruz ki son soruda güncel haliyle gönderebilelim
+    let nextScore = score; 
 
     if (userWord === currentWord) {
       setStatus('correct');
-      setScore(s => s + 1);
+      nextScore = score + 1; // Doğruysa artır
+      setScore(nextScore);   // State güncelle
     } else {
       setStatus('wrong');
-      delay = 2500; // Yanlışsa biraz daha uzun bekletelim ki doğrusunu görsün
+      delay = 2500;
+      // Yanlışsa nextScore aynı kalır
     }
 
     setTimeout(() => {
       if (currentIndex < words.length - 1) {
         setCurrentIndex(prev => prev + 1);
       } else {
-        setIsFinished(true);
+        // Oyun bitti, son hesaplanan skoru gönder
+        finishGame(nextScore);
       }
     }, delay);
-  }, [words, currentIndex, selectedLetters, status]);
+  }, [words, currentIndex, selectedLetters, status, score, token, apiUrl]); // score dependency'e eklendi
 
   // 4. Klavye Dinleyicisi
   useEffect(() => {
@@ -225,10 +254,8 @@ export default function WordScramble() {
                 </div>
             </div>
         )}
-        {/* -------------------------------------------------- */}
 
         {/* Karışık Harfler */}
-        {/* Eğer oyun bittiyse (doğru/yanlış) harfleri gizleyebiliriz veya pasif yapabiliriz. */}
         <div className={`flex flex-wrap gap-3 justify-center mb-12 max-w-md transition-opacity duration-300 ${status !== 'playing' ? 'opacity-50 pointer-events-none' : ''}`}>
             {scrambledLetters.map((l) => (
                 <button

@@ -51,14 +51,39 @@ export default function FillBlankGame() {
     fetchGame();
   }, [apiUrl, token]);
 
+  // --- YENİ EKLENEN: Kayıt Fonksiyonu ---
+  const finishGame = async (finalScore: number) => {
+    setIsFinished(true);
+    try {
+      await fetch(`${apiUrl}/words/game-result`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          gameType: 'FILL_BLANK', // Veritabanında bu string'i kullanıyorsan
+          score: finalScore * 10, // Her doğru 10 puan
+          correct: finalScore,
+          wrong: questions.length - finalScore
+        })
+      });
+      console.log("FillBlank sonucu kaydedildi.");
+    } catch (error) {
+      console.error("Kayıt hatası:", error);
+    }
+  };
+
   const handleOptionClick = (option: string) => {
     if (selectedOption) return;
     setSelectedOption(option);
 
     const currentQ = questions[currentIndex];
+    let nextScore = score;
     
     if (option === currentQ.correctAnswer) {
-      setScore(s => s + 1);
+      nextScore = score + 1;
+      setScore(nextScore);
     }
 
     setTimeout(() => {
@@ -66,7 +91,8 @@ export default function FillBlankGame() {
         setCurrentIndex(p => p + 1);
         setSelectedOption(null);
       } else {
-        setIsFinished(true);
+        // Oyun Bitti
+        finishGame(nextScore);
       }
     }, 1500);
   };
@@ -126,12 +152,12 @@ export default function FillBlankGame() {
                         {part}
                         {i < arr.length - 1 && (
                             <span className={`inline-block border-b-4 px-2 mx-1 min-w-[100px] text-center transition-colors align-bottom ${
-                                selectedOption === currentQ.correctAnswer ? 'text-green-600 border-green-500' :
-                                selectedOption ? 'text-red-500 border-red-500' :
-                                // --- BURASI DEĞİŞTİ: Default hali artık MOR ---
-                                'text-violet-600 border-violet-500 dark:border-violet-400'
+                                selectedOption 
+                                  ? (selectedOption === currentQ.correctAnswer ? 'text-green-600 border-green-500' : 'text-red-500 border-red-500')
+                                  : 'text-violet-600 border-violet-500 dark:border-violet-400'
                             }`}>
-                                {selectedOption ? (selectedOption === currentQ.correctAnswer ? currentQ.correctAnswer : (selectedOption === currentQ.correctAnswer ? '' : currentQ.correctAnswer)) : ''}
+                                {/* Boşluk gösterimi: Cevap seçilmişse o cevap, yoksa alt çizgi */}
+                                {selectedOption ? (selectedOption === currentQ.correctAnswer ? currentQ.correctAnswer : selectedOption) : ''}
                             </span>
                         )}
                     </span>

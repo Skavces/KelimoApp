@@ -10,71 +10,88 @@ import {
 } from '@nestjs/common';
 import { WordService } from './word.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'; 
+import { SwipeStatus } from '@prisma/client';
 
 @Controller('words')
+@UseGuards(JwtAuthGuard) // Kanka bunu en tepeye koyarsan tüm metodlar korunur, tek tek yazmana gerek kalmaz
 export class WordController {
   constructor(private readonly wordService: WordService) {}
 
-  @UseGuards(JwtAuthGuard) 
-  @Get('feed')
-  async getFeed(@Req() req) {
-    const userId = req.user.userId; 
-    return this.wordService.getFeedWords(userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/swipe')
-  async swipe(
-    @Param('id') wordId: string,
-    @Body('status') status: string,
+  // =========================================================
+  // 1. OYUN SONUCU VE İSTATİSTİKLER (Sorunlu kısım burasıydı)
+  // =========================================================
+  
+  // URL: /words/game-result (Frontend ile uyumlu olsun diye tire yaptım)
+  @Post('game-result')
+  async saveGameResult(
     @Req() req,
+    @Body() body: { gameType: string; score: number; correct: number; wrong: number },
   ) {
-    const userId = req.user.userId;
-    return this.wordService.swipeWord(userId, wordId, status as any);
+    return this.wordService.saveGameResult(req.user.userId, body);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('learned')
-  async getLearned(@Req() req) {
-    const userId = req.user.userId;
-    return this.wordService.getLearnedWords(userId);
+  // URL: /words/progress
+  @Get('progress')
+  async getProgress(@Req() req) {
+    return this.wordService.getProgressStats(req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('stats') 
   async getStats(@Req() req) {
     return this.wordService.getUserStats(req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('quiz')
-  getQuiz(
-    @Req() req, // @GetUser yerine @Req kullanıyoruz
-    @Query('mode') mode: 'EN_TR' | 'TR_EN' = 'EN_TR', // @Query import edilmeli
-  ) {
-    const userId = req.user.userId; // ID'yi request'ten alıyoruz
-    return this.wordService.generateQuiz(userId, mode);
+  // =========================================================
+  // 2. KELİME AKIŞI VE SWIPE
+  // =========================================================
+
+  @Get('feed')
+  async getFeed(@Req() req) {
+    return this.wordService.getFeedWords(req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  // URL: /words/:id/swipe (Senin yapını korudum, id parametreden geliyor)
+  @Post(':id/swipe')
+  async swipe(
+    @Param('id') wordId: string,
+    @Body('status') status: SwipeStatus,
+    @Req() req,
+  ) {
+    return this.wordService.swipeWord(req.user.userId, wordId, status);
+  }
+
+  @Get('learned')
+  async getLearned(@Req() req) {
+    return this.wordService.getLearnedWords(req.user.userId);
+  }
+
+  // =========================================================
+  // 3. OYUN DATA GETİRME (Quiz, Scramble vs.)
+  // =========================================================
+
+  @Get('quiz')
+  getQuiz(
+    @Req() req,
+    @Query('mode') mode: 'EN_TR' | 'TR_EN' = 'EN_TR', 
+  ) {
+    return this.wordService.generateQuiz(req.user.userId, mode);
+  }
+
   @Get('game/scramble')
   getScrambleGame(@Req() req) {
     return this.wordService.getScrambleWords(req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('game/fill-blank')
   getFillBlank(@Req() req) {
     return this.wordService.getFillBlankGame(req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('game/memory')
   getMemoryGame(@Req() req) {
     return this.wordService.getMemoryGame(req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('game/dictation')
   getDictationGame(@Req() req) {
     return this.wordService.getDictationGame(req.user.userId);

@@ -23,10 +23,23 @@ export default function Footer() {
         <div className="flex items-center gap-6">
           {/* İkonlar */}
           <div className="flex items-center gap-4">
-            <a href="#" className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors hover:scale-110 transform duration-200">
+            {/* GitHub */}
+            <a 
+              href="https://github.com/Skavces" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors hover:scale-110 transform duration-200"
+            >
               <Github className="w-4 h-4" />
             </a>
-            <a href="#" className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors hover:scale-110 transform duration-200">
+            
+            {/* LinkedIn */}
+            <a 
+              href="https://www.linkedin.com/in/selimkavaklicesme/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors hover:scale-110 transform duration-200"
+            >
               <Linkedin className="w-4 h-4" />
             </a>
           </div>

@@ -194,7 +194,8 @@ export default function Dashboard() {
           </div>
 
           {/* İlerleme */}
-          <div 
+          <div
+            onClick={() => navigate("/progress")} 
             className="group p-8 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm 
             hover:shadow-xl hover:shadow-amber-500/10 hover:border-amber-500/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
           >
