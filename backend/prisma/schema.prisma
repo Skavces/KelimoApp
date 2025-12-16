@@ -15,6 +15,7 @@ model User {
   email     String   @unique
   name      String?
   avatar    String?
+  customAvatar String?  // Kullanıcının yüklediği fotoğraf
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

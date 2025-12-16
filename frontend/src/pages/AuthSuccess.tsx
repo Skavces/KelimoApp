@@ -28,15 +28,15 @@ export default function AuthSuccess() {
     <Layout>
       <div className="min-h-[70vh] flex items-center justify-center">
         <div className="animate-fadeIn flex flex-col items-center gap-4
-                        bg-slate-900/70 backdrop-blur-xl px-10 py-8 rounded-2xl
-                        border border-slate-800 shadow-xl text-center text-slate-200">
+                        bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl px-10 py-8 rounded-2xl
+                        border border-slate-200 dark:border-slate-800 shadow-xl 
+                        text-center text-slate-900 dark:text-slate-200 transition-colors duration-300">
 
-          {/* Loading spinner */}
-          <div className="w-10 h-10 border-2 border-slate-600 border-t-violet-400 rounded-full animate-spin" />
+          <div className="w-10 h-10 border-2 border-slate-200 dark:border-slate-600 border-t-violet-600 dark:border-t-violet-400 rounded-full animate-spin" />
 
           <h2 className="text-xl font-semibold">Google ile giriş başarılı</h2>
 
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Dashboard'a yönlendiriliyorsun...
           </p>
         </div>

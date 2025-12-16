@@ -1,17 +1,35 @@
-import { BookOpen, Sparkles, Target, Trophy, Brain, Zap, Award } from "lucide-react";
+import { BookOpen, Sparkles, Brain, Zap, Award, Moon, Sun } from "lucide-react";
 import { useState } from "react";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
-    window.location.href = "http://localhost:5001/auth/google";
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001";
+    window.location.href = `${apiUrl}/auth/google`;
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white flex transition-colors duration-300 relative">
       
+      {/* Theme Button */}
+      <div className="absolute top-6 left-6 lg:top-8 lg:left-8 z-50">
+        <button
+          onClick={toggleTheme}
+          className="p-3 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all duration-300 shadow-sm border border-slate-200 dark:border-slate-800"
+          title={theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-5 h-5 text-yellow-500 animate-in spin-in-90 duration-300" />
+          ) : (
+            <Moon className="w-5 h-5 text-violet-600 animate-in spin-in-90 duration-300" />
+          )}
+        </button>
+      </div>
+
       {/* Left Side - Login */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16">
         <div className="w-full max-w-md space-y-8">
@@ -21,17 +39,17 @@ export default function Login() {
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/50">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 dark:from-violet-400 dark:via-purple-400 dark:to-fuchsia-400 bg-clip-text text-transparent transition-all">
               KelimoApp
             </span>
           </div>
 
           {/* Heading */}
           <div className="space-y-3">
-            <h1 className="text-4xl lg:text-5xl font-bold text-white">
+            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white transition-colors">
               Hoş Geldin
             </h1>
-            <p className="text-lg text-slate-400">
+            <p className="text-lg text-slate-600 dark:text-slate-400 transition-colors">
               Dil öğrenme yolculuğuna başlamak için giriş yap
             </p>
           </div>
@@ -40,7 +58,7 @@ export default function Login() {
           <button
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="w-full bg-white text-slate-900 hover:bg-slate-50 disabled:bg-slate-200 disabled:cursor-not-allowed font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:hover:scale-100 transition-all duration-300 flex items-center justify-center gap-3 group"
+            className="w-full bg-white dark:bg-white text-slate-900 hover:bg-slate-50 disabled:bg-slate-100 disabled:cursor-not-allowed font-semibold py-4 px-6 rounded-xl shadow-lg border border-slate-200 dark:border-transparent hover:shadow-xl hover:scale-[1.02] disabled:hover:scale-100 transition-all duration-300 flex items-center justify-center gap-3 group"
           >
             {isLoading ? (
               <>
@@ -76,13 +94,13 @@ export default function Login() {
           </button>
 
           {/* Terms */}
-          <p className="text-xs text-slate-500 text-center leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-slate-500 text-center leading-relaxed">
             Devam ederek{" "}
-            <a href="#" className="text-slate-400 hover:text-slate-300 underline">
+            <a href="#" className="text-slate-600 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 underline transition-colors">
               Kullanım Şartları
             </a>{" "}
             ve{" "}
-            <a href="#" className="text-slate-400 hover:text-slate-300 underline">
+            <a href="#" className="text-slate-600 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 underline transition-colors">
               Gizlilik Politikası
             </a>
             'nı kabul etmiş olursun
@@ -92,7 +110,7 @@ export default function Login() {
 
       {/* Right Side - Visual/Hero */}
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-8">
-        <div className="w-full max-w-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 relative overflow-hidden rounded-[3rem] h-[90vh]">
+        <div className="w-full max-w-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 relative overflow-hidden rounded-[3rem] h-[90vh] shadow-2xl shadow-violet-500/20">
         
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
@@ -113,7 +131,7 @@ export default function Login() {
             
             {/* Main Icon */}
             <div className="flex justify-center">
-              <div className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-2xl">
+              <div className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-2xl ring-1 ring-white/30">
                 <Brain className="w-12 h-12 text-white" />
               </div>
             </div>
@@ -123,40 +141,40 @@ export default function Login() {
               <h2 className="text-5xl font-bold leading-tight">
                 Her Gün Yeni Kelimeler Öğren
               </h2>
-              <p className="text-xl text-purple-100">
+              <p className="text-xl text-purple-100/90">
                 Kişiselleştirilmiş öğrenme deneyimi ile dil becerilerini geliştir
               </p>
             </div>
 
             {/* Features */}
             <div className="space-y-6 flex flex-col items-center w-full">
-              <div className="flex items-start gap-4 w-full max-w-xs">
-                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <div className="flex items-start gap-4 w-full max-w-xs group">
+                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-colors">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Akıllı Öğrenme</h3>
-                  <p className="text-purple-100 text-sm">Adaptif algoritma ile kişisel gelişim</p>
+                  <p className="text-purple-100/80 text-sm">Adaptif algoritma ile kişisel gelişim</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-4 w-full max-w-xs">
-                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <div className="flex items-start gap-4 w-full max-w-xs group">
+                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-colors">
                   <Zap className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Hızlı İlerleme</h3>
-                  <p className="text-purple-100 text-sm">Günlük pratiklerle sürekli gelişim</p>
+                  <p className="text-purple-100/80 text-sm">Günlük pratiklerle sürekli gelişim</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-4 w-full max-w-xs">
-                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <div className="flex items-start gap-4 w-full max-w-xs group">
+                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-colors">
                   <Award className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Başarı Takibi</h3>
-                  <p className="text-purple-100 text-sm">Hedeflerine ulaşmanı izle</p>
+                  <p className="text-purple-100/80 text-sm">Hedeflerine ulaşmanı izle</p>
                 </div>
               </div>
             </div>
