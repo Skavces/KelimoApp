@@ -2,7 +2,7 @@
 
 > A full-stack, gamified vocabulary learning platform built with **NestJS** and **React**.
 
-KelimoApp is designed to make language learning addictive and effective. It uses a Tinder-style swipe mechanic for learning new words, spaced repetition logic, and interactive mini-games to reinforce memory.
+KelimoApp is designed to make language learning addictive and effective. It uses an Instagram Reels-style vertical scroll for learning new words, spaced repetition logic, and interactive mini-games to reinforce memory.
 
 ![Project Status](https://img.shields.io/badge/status-active-success.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -21,7 +21,7 @@ KelimoApp is designed to make language learning addictive and effective. It uses
 ## ✨ Key Features
 
 ### 🎯 Core Learning
-* **Swipe to Learn:** Interactive card system. Swipe right if you know it, left if you don't.
+* **Vertical Scroll to Learn:** Reels-style vertical scrolling system. Scroll down to see new words.
 * **Spaced Repetition:** The app tracks your progress and resurfaces words you struggle with.
 * **Real-time Stats:** Track your daily streak, total learned words, and accuracy rates.
 
