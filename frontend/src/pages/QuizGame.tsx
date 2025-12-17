@@ -48,7 +48,6 @@ export default function QuizGame() {
     fetchQuestions();
   }, [mode, apiUrl, token]);
 
-  // --- YENİ EKLENEN KISIM: Oyunu Kaydetme Fonksiyonu ---
   const finishGame = async (finalScore: number) => {
     setIsFinished(true);
 

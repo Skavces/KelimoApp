@@ -15,6 +15,7 @@ import FillBlankGame from "./pages/FillBlankGame";
 import MemoryGame from "./pages/MemoryGame";
 import DictationGame from "./pages/DictationGame";
 import Progress from "./pages/Progress";
+import Achievements from './pages/Achievements';
 
 function RequireAuth({ children }: { children: React.ReactElement }) {
   const token = localStorage.getItem("token");
@@ -137,6 +138,15 @@ export default function App() {
             element={
               <RequireAuth>
                 <Progress />
+              </RequireAuth>
+            } 
+          />
+
+          <Route 
+            path="/achievements" 
+            element={
+              <RequireAuth>
+                <Achievements />
               </RequireAuth>
             } 
           />

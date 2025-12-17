@@ -13,15 +13,10 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SwipeStatus } from '@prisma/client';
 
 @Controller('words')
-@UseGuards(JwtAuthGuard) // Kanka bunu en tepeye koyarsan tüm metodlar korunur, tek tek yazmana gerek kalmaz
+@UseGuards(JwtAuthGuard) 
 export class WordController {
   constructor(private readonly wordService: WordService) {}
 
-  // =========================================================
-  // 1. OYUN SONUCU VE İSTATİSTİKLER (Sorunlu kısım burasıydı)
-  // =========================================================
-  
-  // URL: /words/game-result (Frontend ile uyumlu olsun diye tire yaptım)
   @Post('game-result')
   async saveGameResult(
     @Req() req,
@@ -30,7 +25,6 @@ export class WordController {
     return this.wordService.saveGameResult(req.user.userId, body);
   }
 
-  // URL: /words/progress
   @Get('progress')
   async getProgress(@Req() req) {
     return this.wordService.getProgressStats(req.user.userId);
@@ -41,16 +35,11 @@ export class WordController {
     return this.wordService.getUserStats(req.user.userId);
   }
 
-  // =========================================================
-  // 2. KELİME AKIŞI VE SWIPE
-  // =========================================================
-
   @Get('feed')
   async getFeed(@Req() req) {
     return this.wordService.getFeedWords(req.user.userId);
   }
 
-  // URL: /words/:id/swipe (Senin yapını korudum, id parametreden geliyor)
   @Post(':id/swipe')
   async swipe(
     @Param('id') wordId: string,
@@ -64,10 +53,6 @@ export class WordController {
   async getLearned(@Req() req) {
     return this.wordService.getLearnedWords(req.user.userId);
   }
-
-  // =========================================================
-  // 3. OYUN DATA GETİRME (Quiz, Scramble vs.)
-  // =========================================================
 
   @Get('quiz')
   getQuiz(

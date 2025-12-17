@@ -1,27 +1,19 @@
 import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
+import { useNavigate } from "react-router-dom";
 import { 
   BarChart, Bar, XAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell 
 } from "recharts";
 import { 
-  Trophy, Flame, Target, Calendar, TrendingUp, Medal, Lock, Star,
-  Gamepad2, CheckCircle2, XCircle, Clock
+  Trophy, Flame, Target, Calendar, TrendingUp, Medal, Star,
+  Gamepad2, CheckCircle2, XCircle, Clock, ChevronRight
 } from "lucide-react";
 
-// Rozet Tanımları (Statik, sadece kilit durumu dinamik olacak)
-const BADGE_DEFINITIONS = [
-  { id: 1, name: "Yeni Başlayan", desc: "İlk 10 kelimeyi öğren", icon: <Star className="w-5 h-5 text-yellow-500" /> },
-  { id: 2, name: "Alev Alev", desc: "7 Günlük seri yap", icon: <Flame className="w-5 h-5 text-orange-500" /> }, 
-  { id: 3, name: "Kelime Avcısı", desc: "100 kelimeye ulaş", icon: <Target className="w-5 h-5 text-blue-500" /> },
-  { id: 4, name: "Usta Dilci", desc: "%90 başarı ve 20+ oyun", icon: <Medal className="w-5 h-5 text-purple-500" /> },
-];
-
 export default function Progress() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [hoveredBadge, setHoveredBadge] = useState<number | null>(null);
 
   const apiUrl = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
@@ -55,14 +47,13 @@ export default function Progress() {
     );
   }
 
-  // API'den gelen verileri parçalayalım
-  // recentGames, totalScore ve streak artık backend'den geliyor
-  const { totalLearned, accuracy, weeklyData, badges, recentGames, totalScore, streak } = data;
+  // Veri null gelirse patlamasın diye önlem
+  const { totalLearned, accuracy, weeklyData, badges, recentGames, totalScore, streak } = data || {};
 
-  // Pasta Grafik Verisi (Gerçek)
+  // Pasta Grafik Verisi
   const accuracyChartData = [
-    { name: 'Doğru', value: accuracy, color: '#8b5cf6' },
-    { name: 'Yanlış', value: 100 - accuracy, color: '#cbd5e1' },
+    { name: 'Doğru', value: accuracy || 0, color: '#8b5cf6' },
+    { name: 'Yanlış', value: 100 - (accuracy || 0), color: '#cbd5e1' },
   ];
 
   return (
@@ -83,28 +74,28 @@ export default function Progress() {
           {[
             { 
               label: "Toplam Puan", 
-              value: totalScore || 0, // Backend'den gelen gerçek skor
+              value: totalScore || 0,
               icon: Trophy, 
               color: "text-yellow-500", 
               bg: "bg-yellow-100 dark:bg-yellow-900/20" 
             },
             { 
               label: "Gün Serisi", 
-              value: `${streak} Gün`, // Backend'den gelen gerçek streak
+              value: `${streak || 0} Gün`,
               icon: Flame, 
               color: "text-orange-500", 
               bg: "bg-orange-100 dark:bg-orange-900/20" 
             },
             { 
               label: "Öğrenilen", 
-              value: totalLearned, 
+              value: totalLearned || 0, 
               icon: Calendar, 
               color: "text-blue-500", 
               bg: "bg-blue-100 dark:bg-blue-900/20" 
             },
             { 
               label: "Başarı Oranı", 
-              value: `%${accuracy}`, 
+              value: `%${accuracy || 0}`, 
               icon: TrendingUp, 
               color: "text-emerald-500", 
               bg: "bg-emerald-100 dark:bg-emerald-900/20" 
@@ -129,7 +120,7 @@ export default function Progress() {
           <div className="lg:col-span-2 p-8 rounded-3xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm">
             <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-violet-500" />
-              Son 7 Günlük Aktivite
+              Son 7 Günlük Aktivite (Öğrenilen Kelime)
             </h3>
             <div className="h-[300px] w-full">
               {weeklyData && weeklyData.length > 0 ? (
@@ -173,7 +164,7 @@ export default function Progress() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span className="text-3xl font-bold text-slate-900 dark:text-slate-100">%{accuracy}</span>
+                <span className="text-3xl font-bold text-slate-900 dark:text-slate-100">%{accuracy || 0}</span>
               </div>
             </div>
             <div className="flex gap-6 mt-6">
@@ -189,48 +180,42 @@ export default function Progress() {
           </div>
         </div>
 
-        {/* Rozetler */}
+        {/* Rozetler Kısayolu */}
         <div>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
-            <Medal className="w-5 h-5 text-amber-500" />
-            Başarı Rozetleri
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {BADGE_DEFINITIONS.map((badgeDef) => {
-              // Backend'den gelen unlocked bilgisini bul
-              const isUnlocked = badges.find((b: any) => b.id === badgeDef.id)?.unlocked;
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Medal className="w-5 h-5 text-amber-500" />
+              Başarı Rozetleri
+            </h3>
+            <button 
+              onClick={() => navigate('/achievements')}
+              className="text-sm font-semibold text-violet-600 dark:text-violet-400 hover:underline flex items-center gap-1"
+            >
+              Tümünü Gör <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
 
-              return (
-                <div 
-                  key={badgeDef.id}
-                  onMouseEnter={() => setHoveredBadge(badgeDef.id)}
-                  onMouseLeave={() => setHoveredBadge(null)}
-                  className={`
-                    relative group p-6 rounded-2xl border transition-all duration-300 flex flex-col items-center text-center gap-3
-                    ${isUnlocked 
-                      ? 'bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-200 dark:border-violet-500/30' 
-                      : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-60 grayscale'
-                    }
-                  `}
-                >
-                  <div className={`
-                    w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-sm
-                    ${isUnlocked ? 'bg-white dark:bg-slate-800' : 'bg-slate-200 dark:bg-slate-800'}
-                  `}>
-                    {isUnlocked ? badgeDef.icon : <Lock className="w-6 h-6 text-slate-400" />}
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-bold text-slate-900 dark:text-slate-100">{badgeDef.name}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{badgeDef.desc}</p>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+             {/* Şık bir özet kartı */}
+             <div className="bg-gradient-to-r from-violet-500 to-purple-600 rounded-2xl p-6 text-white flex items-center justify-between cursor-pointer shadow-lg shadow-violet-500/20 transform transition hover:scale-[1.01]"
+                  onClick={() => navigate("/achievements")}>
+                <div>
+                   <h4 className="text-lg font-bold">Rozet Koleksiyonunu Görüntüle</h4>
+                   <p className="text-violet-100 text-sm mt-1">
+                     Şu ana kadar kazanılan: <span className="font-bold">{badges ? badges.filter((b:any) => b.unlocked).length : 0}</span> / 16
+                   </p>
                 </div>
-              );
-            })}
+                <div className="flex -space-x-3 pl-4">
+                   <div className="w-10 h-10 rounded-full bg-yellow-400 border-2 border-white flex items-center justify-center text-yellow-900"><Star className="w-5 h-5" /></div>
+                   <div className="w-10 h-10 rounded-full bg-orange-500 border-2 border-white flex items-center justify-center text-white"><Flame className="w-5 h-5" /></div>
+                   <div className="w-10 h-10 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-white"><Target className="w-5 h-5" /></div>
+                   <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-white flex items-center justify-center text-xs font-bold">...</div>
+                </div>
+             </div>
           </div>
         </div>
 
-        {/* --- YENİ EKLENEN: SON OYUN GEÇMİŞİ --- */}
+        {/* Son Oyun Geçmişi */}
         <div className="mt-12">
           <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
             <Gamepad2 className="w-5 h-5 text-indigo-500" />
@@ -256,10 +241,11 @@ export default function Progress() {
                       
                       <div>
                         <h4 className="font-semibold text-slate-900 dark:text-slate-100">
-                          {game.gameType === 'QUIZ' ? 'Kelime Testi' : 
-                           game.gameType === 'SCRAMBLE' ? 'Kelime Avı' :
-                           game.gameType === 'MEMORY' ? 'Hafıza Oyunu' : 
-                           game.gameType === 'DICTATION' ? 'Dinleme' : 
+                          {game.gameType === 'QUIZ' ? 'Kelime Eşleştirme' :
+                           game.gameType === 'FILL_BLANK' ? 'Cümle Tamamlama' : 
+                           game.gameType === 'SCRAMBLE' ? 'Kelime Kurmaca' :
+                           game.gameType === 'MEMORY' ? 'Hafıza Kartları' : 
+                           game.gameType === 'DICTATION' ? 'Dinle ve Yaz' : 
                            game.gameType}
                         </h4>
                         <span className="text-xs text-slate-500 flex items-center gap-1">

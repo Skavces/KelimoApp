@@ -2,16 +2,13 @@ import { useState, useEffect } from "react";
 import {
   BookOpen,
   Target,
-  TrendingUp,
-  Award,
   ChevronRight,
-  Flame, // Alev ikonu eklendi
-  Trophy
+  Flame,
+  Award
 } from "lucide-react";
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
 
-// JWT Decode fonksiyonu (Kullanıcı adını almak için)
 type DecodedToken = {
   sub: string;
   email?: string;
@@ -39,13 +36,12 @@ function decodeJwt(token: string | null): DecodedToken | null {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  
-  // State: Backend'den gelecek veriler
+
   const [stats, setStats] = useState({ 
     learnedCount: 0, 
     accuracy: 0, 
     streak: 0,
-    totalCount: 0 
+    totalScore: 0 // totalCount yerine totalScore daha mantıklı burada
   });
   
   const [loading, setLoading] = useState(true);
@@ -60,17 +56,19 @@ export default function Dashboard() {
     const fetchStats = async () => {
       if (!token) return;
       try {
-        const res = await fetch(`${apiUrl}/words/stats`, {
+        // BURASI DEĞİŞTİ: Artık /stats yerine /progress kullanıyoruz
+        // Çünkü gerçek 'accuracy' hesabı orada yapılıyor.
+        const res = await fetch(`${apiUrl}/words/progress`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
           const data = await res.json();
-          // Backend'den gelen veriyi state'e atıyoruz
+          // Backend'den gelen veri yapısına göre eşleştiriyoruz
           setStats({
-            learnedCount: data.learnedCount || 0,
-            accuracy: data.accuracy || 0, // Backend'de eklediğimiz doğruluk oranı
-            streak: data.streak || 0,     // Backend'de hesapladığımız gerçek streak
-            totalCount: data.totalCount || 0
+            learnedCount: data.totalLearned || 0, // Backend'de totalLearned olarak dönüyor
+            accuracy: data.accuracy || 0,         // Gerçek başarı oranı
+            streak: data.streak || 0,
+            totalScore: data.totalScore || 0
           });
         }
       } catch (err) {
@@ -121,7 +119,7 @@ export default function Dashboard() {
             <p className="text-sm text-slate-500 dark:text-slate-400">Toplam kelime hazinen</p>
           </div>
 
-          {/* 2. Doğruluk Oranı (Backend'den geliyor) */}
+          {/* 2. Doğruluk Oranı (ARTIK GERÇEK VERİ) */}
           <div className="p-6 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none transition-transform hover:scale-[1.02]">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
@@ -135,7 +133,7 @@ export default function Dashboard() {
             <p className="text-sm text-slate-500 dark:text-slate-400">Ortalama performansın</p>
           </div>
 
-          {/* 3. Gün Serisi (Streak) - Backend'den geliyor */}
+          {/* 3. Gün Serisi (Streak) */}
           <div className="p-6 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none transition-transform hover:scale-[1.02]">
             <div className="flex items-center justify-between mb-4">
               <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stats.streak > 0 ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-slate-100 dark:bg-slate-800'}`}>

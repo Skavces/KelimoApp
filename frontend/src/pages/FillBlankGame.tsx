@@ -8,7 +8,6 @@ type FillBlankQuestion = {
   question: string; // Gizli cümle
   correctAnswer: string;
   options: string[];
-  meaning: string; // İpucu
 };
 
 export default function FillBlankGame() {
@@ -51,7 +50,7 @@ export default function FillBlankGame() {
     fetchGame();
   }, [apiUrl, token]);
 
-  // --- YENİ EKLENEN: Kayıt Fonksiyonu ---
+  // Kayıt Fonksiyonu 
   const finishGame = async (finalScore: number) => {
     setIsFinished(true);
     try {
@@ -163,13 +162,6 @@ export default function FillBlankGame() {
                     </span>
                 ))}
             </h2>
-            
-            {/* İpucu (Türkçesi) */}
-            <div className="mt-6 inline-block px-4 py-2 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                    İpucu: {currentQ.meaning}
-                </p>
-            </div>
         </div>
 
         {/* Şıklar */}

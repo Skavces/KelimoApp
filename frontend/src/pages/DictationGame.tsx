@@ -79,7 +79,6 @@ export default function DictationGame() {
     });
   }, [currentIndex, words]);
 
-  // --- YENİ EKLENEN: Kayıt Fonksiyonu ---
   const finishGame = async (finalScore: number) => {
     setIsFinished(true);
     try {
@@ -175,7 +174,6 @@ export default function DictationGame() {
     }
   };
 
-  // --- RENDER ---
   if (loading) return <Layout><div className="min-h-screen flex justify-center items-center text-slate-500">Oyun Yükleniyor...</div></Layout>;
   if (errorMsg) return <Layout><div className="min-h-screen flex justify-center items-center text-red-500">{errorMsg}</div></Layout>;
 

@@ -21,10 +21,12 @@ export class WordService {
   }
 
   async getProgressStats(userId: string) {
+    // A. Temel Veriler
     const learnedCount = await this.prisma.userWordSwipe.count({
       where: { userId, status: SwipeStatus.LEARNED },
     });
 
+    // B. Oyun İstatistikleri
     const allGames = await this.prisma.userGameResult.aggregate({
       where: { userId },
       _sum: {
@@ -32,17 +34,23 @@ export class WordService {
         wrong: true,
         score: true,
       },
+      _count: {
+        id: true, // Toplam oynanan oyun sayısı
+      },
     });
 
     const totalCorrect = allGames._sum.correct || 0;
     const totalWrong = allGames._sum.wrong || 0;
     const totalQuestions = totalCorrect + totalWrong;
     const totalScore = allGames._sum.score || 0;
+    const totalGamesPlayed = allGames._count.id || 0; // Yeni: Toplam oyun sayısı
 
+    // Başarı Oranı
     const accuracy = totalQuestions > 0 
       ? Math.round((totalCorrect / totalQuestions) * 100) 
       : 0;
 
+    // C. Haftalık Grafik (Önceki düzeltmemizle aynı - Sadece kelime sayısı)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -54,14 +62,6 @@ export class WordService {
         createdAt: { gte: sevenDaysAgo },
       },
       select: { createdAt: true },
-    });
-
-    const lastWeekGames = await this.prisma.userGameResult.findMany({
-      where: {
-        userId,
-        createdAt: { gte: sevenDaysAgo },
-      },
-      select: { createdAt: true, score: true },
     });
 
     const daysMap = new Map<string, number>();
@@ -76,23 +76,41 @@ export class WordService {
 
     lastWeekSwipes.forEach((swipe) => {
       const dayName = trDays[swipe.createdAt.getDay()];
-      daysMap.set(dayName, (daysMap.get(dayName) || 0) + 10);
-    });
-
-    lastWeekGames.forEach((game) => {
-      const dayName = trDays[game.createdAt.getDay()];
-      daysMap.set(dayName, (daysMap.get(dayName) || 0) + Math.round(game.score / 10));
+      daysMap.set(dayName, (daysMap.get(dayName) || 0) + 1);
     });
 
     const weeklyData = Array.from(daysMap, ([name, words]) => ({ name, words })).reverse();
     const { streak } = await this.getUserStats(userId); 
+
+    // D. GENİŞLETİLMİŞ ROZET SİSTEMİ
+    // ID mantığını frontend ile eşleşecek şekilde kuruyoruz.
     const badges = [
-      { id: 1, unlocked: learnedCount >= 10 }, // Yeni Başlayan
-      { id: 2, unlocked: streak >= 7 },       // Alev Alev
-      { id: 3, unlocked: learnedCount >= 100 }, // Kelime Avcısı
-      { id: 4, unlocked: accuracy >= 90 && totalQuestions >= 20 }, // Usta Dilci
+      // KELİME ROZETLERİ (100 serisi)
+      { id: 101, unlocked: learnedCount >= 10 },    // İlk Adım
+      { id: 102, unlocked: learnedCount >= 50 },    // Kelime Çırağı
+      { id: 103, unlocked: learnedCount >= 100 },   // Kelime Avcısı
+      { id: 104, unlocked: learnedCount >= 500 },   // Sözlük Gibi
+      { id: 105, unlocked: learnedCount >= 1000 },  // Dil Üstadı
+
+      // SERİ (STREAK) ROZETLERİ (200 serisi)
+      { id: 201, unlocked: streak >= 3 },           // Isınma Turu
+      { id: 202, unlocked: streak >= 7 },           // Alev Alev
+      { id: 203, unlocked: streak >= 14 },          // Durdurulamaz
+      { id: 204, unlocked: streak >= 30 },          // Aylık Maraton
+
+      // PUAN VE OYUN ROZETLERİ (300 serisi)
+      { id: 301, unlocked: totalScore >= 100 },     // Puan Toplayıcı
+      { id: 302, unlocked: totalScore >= 1000 },    // Skor Makinesi
+      { id: 303, unlocked: totalScore >= 5000 },    // Efsane
+      { id: 304, unlocked: totalGamesPlayed >= 10 },// Oyuncu
+      { id: 305, unlocked: totalGamesPlayed >= 50 },// Oyun Bağımlısı
+
+      // BAŞARI/KALİTE ROZETLERİ (400 serisi)
+      { id: 401, unlocked: accuracy >= 90 && totalQuestions >= 50 }, // Keskin Nişancı
+      { id: 402, unlocked: accuracy === 100 && totalQuestions >= 20 }, // Mükemmeliyetçi
     ];
 
+    // E. Son Oyunlar
     const recentGames = await this.prisma.userGameResult.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' }, 
@@ -214,7 +232,7 @@ export class WordService {
       const otherWords = learnedWords.filter((w) => w.id !== word.id);
       const wrongOptions = otherWords
         .sort(() => 0.5 - Math.random())
-        .slice(0, 3); // 3 tane yanlış
+        .slice(0, 3);
 
       const optionsRaw = [...wrongOptions, word];
       const optionsShuffled = optionsRaw.sort(() => 0.5 - Math.random());
