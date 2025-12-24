@@ -82,8 +82,6 @@ export class WordService {
     const weeklyData = Array.from(daysMap, ([name, words]) => ({ name, words })).reverse();
     const { streak } = await this.getUserStats(userId); 
 
-    // D. GENİŞLETİLMİŞ ROZET SİSTEMİ
-    // ID mantığını frontend ile eşleşecek şekilde kuruyoruz.
     const badges = [
       // KELİME ROZETLERİ (100 serisi)
       { id: 101, unlocked: learnedCount >= 10 },    // İlk Adım
